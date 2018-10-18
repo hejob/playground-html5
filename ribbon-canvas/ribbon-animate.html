@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Ribbon Canvas</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="initial-scale=1, maximum-scale=2, user-scalable=yes">
+<link href="http://fonts.googleapis.com/css?family=Open+Sans|Montserrat:700" rel="stylesheet" type="text/css">
+<style>
+    html, body {
+        width: 100%;
+        height: 100%;
+        font-family: 'Open Sans', 'Helvetica Neue', 'Hiragino Sans GB', 'LiHei Pro', Arial, sans-serif;
+        color: #999;
+        margin: 0;
+   }
+    #wrapper {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 320px;
+        margin: 0;
+        margin-left: -160px;
+        margin-top: -160px;
+        text-align: center;
+    }
+    h1 {
+        position: relative;
+        color: #333;
+        font-family: 'Montserrat', 'Helvetica Neue', Arial, sans-serif;
+        font-weight: 900;
+        font-size: 30px;
+        letter-spacing: 4px;
+        text-transform: uppercase;
+        margin: 10px 0;
+        left: 2px;
+    }
+    h2 {
+        position: relative;
+        font-weight: 300;
+        font-size: 16px;
+        line-height: 24px;
+        letter-spacing: 2px;
+        text-transform: capitalize;
+        margin: 5px 0 20px 0;
+    }
+    p {
+        position: relative;
+        font-weight: 300;
+        font-size: 15px;
+        margin: 4px 0;
+    }
+    canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
+</style>
+</head>
+<body>
+    <div id="wrapper">
+        <h1>Ribbon Canvas</h1>
+        <h2>random animated triangle-meshed color ribbon</h2>
+        <p>Blah-blah</p>
+        <p>Rubish</p>
+        <p>ホニャララ</p>
+        <p>うみゃー</p>
+    </div>
+    <canvas></canvas>
+
+<script type="text/javascript">
+(function() {
+    // init values
+    var canvas = document.getElementsByTagName("canvas")[0],
+        ctx = canvas.getContext("2d"),
+        w = window.innerWidth,
+        h = window.innerHeight,
+        n = Math.round(w/80),
+        ymin = 0, ymax = 0.1,
+        xmin = 0.01, xmax = 0.16,
+        cmin = 0.2, cmax = 1.0,
+        ystart = 0.7, yend = Math.random(),
+        ys1 = 0.7, ye1 = Math.random(),
+        ys2 = 0.7, ye2 = Math.random(),
+        c1 = Math.random(), c2 = Math.random(),
+        c_start = c1,
+        time_scale = 1500,
+        time_scale2 = 700,
+        pt1 = [],
+        pt2 = [],
+        alpha = "0.7"; // string for not dealing with round problems
+
+    function getY(x) {
+        var yx = Math.sin(Math.PI/2.0*1.1*x) * 1.2;
+        var ybase = (yend - ystart) * yx + ystart;
+        var y = ybase + (Math.random()*1-0.5)*(ymax-ymin)+ymin;
+        if (y > 1) return 2- y;
+        if (y < 0) return -y;
+        return y;
+    }
+    function getX(i) {
+        var xi = 1.0/(n-1)*i;
+        return Math.random()*(xmax-xmin)+xmin + xi - 0.5/(n-1);
+    }
+    // arg x: periodic for every [0,1)
+    function getXColor(x) {
+        function getColor(x) {
+            var xx = parseFloat(x) - Math.floor(x);
+            var y = Math.abs(6*xx-3)-1;
+            var l = Math.max(Math.min(y, 1), 0);
+            var ll = cmin + l * (cmax - cmin);
+            return Math.round(ll * 255);
+        }
+        return "rgba(" + getColor(x) + "," + getColor(x+1.0/3) + "," + getColor(x+2.0/3) + ", " + alpha + ")";
+    }
+    // init canvas
+    canvas.width = w, canvas.height = h;
+
+    // draw triagles
+    var last = null;
+    function draw(t) {
+        if (last === null) {
+            last = t;
+        }
+        if (t - last < 50.0) {
+            window.requestAnimationFrame(draw);
+            return;
+        }
+        last = t;
+
+        // console.log('draw', Math.PI/2.0/time_scale*t);
+        ctx.clearRect(0, 0, w, h);
+
+        var scale = (Math.cos(Math.PI/2.0/time_scale*t) + 1) / 2.0;
+        var scale2 = (Math.cos(Math.PI/2.0/time_scale2*t) + 1) / 2.0;
+        c_start = c1 * scale2 + c2 * (1 - scale2);
+
+        function interpolate(ps, pe, scale) {
+            var x = ps[0] * scale + pe[0] * (1.0 - scale);
+            var y = ps[1] * scale + pe[1] * (1.0 - scale);
+            return [x, y];
+        }
+
+        // console.log(scale);
+        var p1 = interpolate(pt1[0], pt2[0], scale);
+        var p2 = interpolate(pt1[1], pt2[1], scale);
+
+        for (var i=0; i<n; i++) {
+            var p3 = interpolate(pt1[2+i], pt2[2+i], scale);
+            
+            ctx.beginPath();
+            ctx.fillStyle = getXColor(c_start + p3[0]);
+            ctx.moveTo(p1[0]*w,p1[1]*h);
+            ctx.lineTo(p2[0]*w,p2[1]*h);
+            ctx.lineTo(p3[0]*w,p3[1]*h);
+            ctx.fill();
+
+            p1 = p2; p2 = p3;
+        }
+
+        window.requestAnimationFrame(draw);
+    }
+
+    function init() {
+        ys1 = 0.7, ye1 = Math.random();
+        ys2 = 0.7, ye2 = Math.random();
+        c1 = Math.random(), c2 = Math.random();
+
+        ystart = ys1, yend = ye1;
+        pt1 = []; pt2 = [];
+        pt1.push([0, getY(0)]);
+        pt1.push([0, getY(0)]);
+        for (var i=0; i<n; i++) {
+            var newx = getX(i);
+            var newy = getY(newx);
+            pt1.push([newx, newy]);
+        }
+        ystart = ys2, yend = ye2;
+        pt2.push([0, getY(0)]);
+        pt2.push([0, getY(0)]);
+        for (var i=0; i<n; i++) {
+            var newx = getX(i);
+            var newy = getY(newx);
+            pt2.push([newx, newy]);
+        }
+    }
+
+    init();
+    window.requestAnimationFrame(draw);
+
+    document.addEventListener("click", function(e) {
+        init();
+    });
+})();
+</script>
+</body>
+</html>
