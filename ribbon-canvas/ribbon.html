@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Ribbon Canvas</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="initial-scale=1, maximum-scale=2, user-scalable=yes">
+<link href="http://fonts.googleapis.com/css?family=Open+Sans|Montserrat:700" rel="stylesheet" type="text/css">
+<style>
+    html, body {
+        width: 100%;
+        height: 100%;
+        font-family: 'Open Sans', 'Helvetica Neue', 'Hiragino Sans GB', 'LiHei Pro', Arial, sans-serif;
+        color: #999;
+    }
+    #wrapper {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 320px;
+        margin: 0;
+        margin-left: -160px;
+        margin-top: -160px;
+        text-align: center;
+    }
+    h1 {
+        position: relative;
+        color: #333;
+        font-family: 'Montserrat', 'Helvetica Neue', Arial, sans-serif;
+        font-weight: 900;
+        font-size: 30px;
+        letter-spacing: 4px;
+        text-transform: uppercase;
+        margin: 10px 0;
+        left: 2px;
+    }
+    h2 {
+        position: relative;
+        font-weight: 300;
+        font-size: 16px;
+        line-height: 24px;
+        letter-spacing: 2px;
+        text-transform: capitalize;
+        margin: 5px 0 20px 0;
+    }
+    p {
+        position: relative;
+        font-weight: 300;
+        font-size: 15px;
+        margin: 4px 0;
+    }
+    canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
+</style>
+</head>
+<body>
+    <div id="wrapper">
+        <h1>Ribbon Canvas</h1>
+        <h2>random animated triangle-meshed color ribbon</h2>
+        <p>Blah-blah</p>
+        <p>Rubish</p>
+        <p>ホニャララ</p>
+        <p>うみゃー</p>
+    </div>
+    <canvas></canvas>
+
+<script type="text/javascript">
+(function() {
+    // init values
+    var canvas = document.getElementsByTagName("canvas")[0],
+        ctx = canvas.getContext("2d"),
+        w = window.innerWidth,
+        h = window.innerHeight,
+        ymin = 0.5, ymax = 0.9,
+        xmin = 0.01, xmax = 0.16,
+        cmin = 0.2, cmax = 1.0,
+        alpha = "0.7"; // string for not dealing with round problems
+        bla;
+    function getYExact() {
+        return Math.random()*(ymax-ymin)+ymin;
+    }
+    function getXDelta() {
+        return Math.random()*(xmax-xmin)+xmin;
+    }
+    // arg x: periodic for every [0,1)
+    function getXColor(x) {
+        function getColor(x) {
+            var xx = parseFloat(x) - Math.floor(x);
+            var y = Math.abs(6*xx-3)-1;
+            var l = Math.max(Math.min(y, 1), 0);
+            var ll = cmin + l * (cmax - cmin);
+            return Math.round(ll * 255);
+        }
+        return "rgba(" + getColor(x) + "," + getColor(x+1.0/3) + "," + getColor(x+2.0/3) + ", " + alpha + ")";
+    }
+    // init canvas
+    canvas.width = w, canvas.height = h;
+
+    // draw triagles
+    var x1 = 0, y1 = getYExact(),
+        x2 = 0, y2 = getYExact(),
+        x3 = getXDelta(), y3 = getYExact(),
+        c_start = Math.random(),
+        bla;
+    var next_done = false;
+    while (true) {
+        ctx.beginPath();
+        ctx.fillStyle = getXColor(c_start + x3);  ctx.moveTo(x1*w,y1*h);    ctx.lineTo(x2*w,y2*h);    ctx.lineTo(x3*w,y3*h);    ctx.fill();
+        if (next_done) break;
+        x1 = x2, y1 = y2, x2 = x3, y2 = y3;
+        if (x3 > (1.0 - xmax)) {
+            next_done = true;
+            x3 = 1.0;
+        } else {
+            x3 = x3 + getXDelta();
+        }
+        y3 = getYExact();
+    }
+})();
+</script>
+</body>
+</html>
