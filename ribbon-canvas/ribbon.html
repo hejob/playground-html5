@@ -11,7 +11,8 @@
         height: 100%;
         font-family: 'Open Sans', 'Helvetica Neue', 'Hiragino Sans GB', 'LiHei Pro', Arial, sans-serif;
         color: #999;
-    }
+        margin: 0;
+   }
     #wrapper {
         position: absolute;
         top: 50%;
@@ -75,16 +76,24 @@
         ctx = canvas.getContext("2d"),
         w = window.innerWidth,
         h = window.innerHeight,
-        ymin = 0.5, ymax = 0.9,
+        n = 12,
+        ymin = 0, ymax = 0.1,
         xmin = 0.01, xmax = 0.16,
         cmin = 0.2, cmax = 1.0,
+        ystart = 0.7, yend = Math.random(),
         alpha = "0.7"; // string for not dealing with round problems
-        bla;
-    function getYExact() {
-        return Math.random()*(ymax-ymin)+ymin;
+
+    function getY(x) {
+        var yx = Math.sin(Math.PI/2.0*1.1*x) * 1.2;
+        var ybase = (yend - ystart) * yx + ystart;
+        var y = ybase + (Math.random()*1-0.5)*(ymax-ymin)+ymin;
+        if (y > 1) return 2- y;
+        if (y < 0) return -y;
+        return y;
     }
-    function getXDelta() {
-        return Math.random()*(xmax-xmin)+xmin;
+    function getX(i) {
+        var xi = 1.0/(n-1)*i;
+        return Math.random()*(xmax-xmin)+xmin + xi - 0.5/(n-1);
     }
     // arg x: periodic for every [0,1)
     function getXColor(x) {
@@ -101,25 +110,30 @@
     canvas.width = w, canvas.height = h;
 
     // draw triagles
-    var x1 = 0, y1 = getYExact(),
-        x2 = 0, y2 = getYExact(),
-        x3 = getXDelta(), y3 = getYExact(),
-        c_start = Math.random(),
-        bla;
-    var next_done = false;
-    while (true) {
-        ctx.beginPath();
-        ctx.fillStyle = getXColor(c_start + x3);  ctx.moveTo(x1*w,y1*h);    ctx.lineTo(x2*w,y2*h);    ctx.lineTo(x3*w,y3*h);    ctx.fill();
-        if (next_done) break;
-        x1 = x2, y1 = y2, x2 = x3, y2 = y3;
-        if (x3 > (1.0 - xmax)) {
-            next_done = true;
-            x3 = 1.0;
-        } else {
-            x3 = x3 + getXDelta();
+    function draw() {
+        var x1 = 0, y1 = getY(x1),
+            x2 = 0, y2 = getY(x2),
+            x3 = 0, y3 = getY(x3),
+            c_start = Math.random();
+        var next_done = false;
+        for (var i=0; i<n; i++) {
+            var newx = getX(i);
+            x3 = newx;
+            y3 = getY(x3)
+
+            ctx.beginPath();
+            ctx.fillStyle = getXColor(c_start + x3);  ctx.moveTo(x1*w,y1*h);    ctx.lineTo(x2*w,y2*h);    ctx.lineTo(x3*w,y3*h);    ctx.fill();
+
+            x1 = x2, y1 = y2, x2 = x3, y2 = y3;
         }
-        y3 = getYExact();
     }
+
+    draw();
+    document.addEventListener("click", function(e) {
+        yend = Math.random();
+        ctx.clearRect(0, 0, w, h);
+        draw();
+    });
 })();
 </script>
 </body>
